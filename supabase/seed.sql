@@ -1,18 +1,24 @@
 -- ============================================================
 -- Shadow ToDo — Sample Seed Data
 -- Run in: Supabase Dashboard → SQL Editor → New Query
--- Creates 3 groups + 100 tasks for the currently signed-in user
--- NOTE: Sign in to the app first, then run this script
+-- Creates 3 groups + 100 tasks for the user whose email is set below
+--
+-- HOW TO USE:
+--   1. Replace the email below with the email you sign in to the app with
+--   2. Paste this whole script into Supabase SQL Editor and Run
 -- ============================================================
 
 DO $$
 DECLARE
-  uid uuid := auth.uid();
+  target_email text := 'pradeepkumar.r@zohocorp.com';  -- <-- CHANGE THIS if needed
+  uid uuid;
   now_ts timestamptz := now();
 BEGIN
 
+SELECT id INTO uid FROM auth.users WHERE email = target_email LIMIT 1;
+
 IF uid IS NULL THEN
-  RAISE EXCEPTION 'Not authenticated. Sign in to the app first, then re-run this script.';
+  RAISE EXCEPTION 'No auth user found for email %. Sign up/sign in to the app first, or update target_email at the top of this script.', target_email;
 END IF;
 
 -- ──────────────────────────────────────────────
