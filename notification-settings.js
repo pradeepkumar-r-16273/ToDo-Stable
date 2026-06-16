@@ -67,7 +67,61 @@
   function savePrefs(prefs) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch(e) {}
     window.dispatchEvent(new CustomEvent('notifPrefsChanged', { detail: prefs }));
+    sbSavePrefs(prefs);
   }
+
+  /* Supabase sync — fire-and-forget */
+  function sbSavePrefs(prefs) {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.auth.getUser().then(function(res) {
+      var owner = res.data && res.data.user && res.data.user.id;
+      if (!owner) return;
+      ShadowDB._sb.from('notification_preferences').upsert({
+        owner_id: owner,
+        notifications_enabled: prefs.notificationsEnabled,
+        desktop: prefs.desktop || {},
+        reminder: prefs.reminder || {},
+        email_prefs: prefs.email || {},
+        priority_users: prefs.priorityUsers || [],
+        dnd: prefs.dnd || {},
+        triggers: prefs.triggers || {},
+        group_prefs: prefs.groupPrefs || {},
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'owner_id' }).then(function(r) {
+        if (r.error) console.warn('[NS] sb save prefs:', r.error.message);
+      });
+    });
+  }
+
+  /* On boot, try to load prefs from Supabase and merge into localStorage */
+  function syncPrefsFromSupabase() {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.auth.getUser().then(function(res) {
+      var owner = res.data && res.data.user && res.data.user.id;
+      if (!owner) return;
+      ShadowDB._sb.from('notification_preferences').select('*').eq('owner_id', owner).maybeSingle()
+        .then(function(r) {
+          if (r.error || !r.data) return;
+          var d = r.data;
+          var sbPrefs = {
+            notificationsEnabled: d.notifications_enabled,
+            desktop: d.desktop || {},
+            reminder: d.reminder || {},
+            email: d.email_prefs || {},
+            priorityUsers: d.priority_users || [],
+            dnd: d.dnd || {},
+            triggers: d.triggers || {},
+            groupPrefs: d.group_prefs || {}
+          };
+          var merged = deepMerge(getDefaultPrefs(), sbPrefs);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch(e) {}
+          window.dispatchEvent(new CustomEvent('notifPrefsChanged', { detail: merged }));
+        });
+    });
+  }
+
+  document.addEventListener('shadowdb:ready', syncPrefsFromSupabase, { once: true });
+  if (window.ShadowDB && ShadowDB._sb) syncPrefsFromSupabase();
 
   function deepMerge(target, source) {
     var result = Object.assign({}, target);

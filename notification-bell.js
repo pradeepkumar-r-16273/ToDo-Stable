@@ -25,6 +25,74 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_NOTIFS))); } catch(e) {}
   }
 
+  /* Supabase sync helpers — fire-and-forget, never block the UI */
+  function sbInsertNotification(entry) {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.auth.getUser().then(function(res) {
+      var owner = res.data && res.data.user && res.data.user.id;
+      if (!owner) return;
+      ShadowDB._sb.from('notifications').insert({
+        id: entry.id, owner_id: owner, type: entry.type,
+        task_id: entry.taskId || null, actor: entry.actor,
+        message: entry.message, read: entry.read || false,
+        created_at: entry.time
+      }).then(function(r) { if (r.error) console.warn('[NB] sb insert:', r.error.message); });
+    });
+  }
+
+  function sbMarkAllRead() {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.auth.getUser().then(function(res) {
+      var owner = res.data && res.data.user && res.data.user.id;
+      if (!owner) return;
+      ShadowDB._sb.from('notifications').update({ read: true }).eq('owner_id', owner).eq('read', false)
+        .then(function(r) { if (r.error) console.warn('[NB] sb markAllRead:', r.error.message); });
+    });
+  }
+
+  function sbClearAll() {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.auth.getUser().then(function(res) {
+      var owner = res.data && res.data.user && res.data.user.id;
+      if (!owner) return;
+      ShadowDB._sb.from('notifications').delete().eq('owner_id', owner)
+        .then(function(r) { if (r.error) console.warn('[NB] sb clearAll:', r.error.message); });
+    });
+  }
+
+  function sbMarkOneRead(id) {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.from('notifications').update({ read: true }).eq('id', id)
+      .then(function(r) { if (r.error) console.warn('[NB] sb markRead:', r.error.message); });
+  }
+
+  /* Fetch from Supabase and merge with localStorage on boot */
+  function syncFromSupabase() {
+    if (!window.ShadowDB || !ShadowDB._sb) return;
+    ShadowDB._sb.auth.getUser().then(function(res) {
+      var owner = res.data && res.data.user && res.data.user.id;
+      if (!owner) return;
+      ShadowDB._sb.from('notifications').select('*').eq('owner_id', owner)
+        .order('created_at', { ascending: false }).limit(MAX_NOTIFS)
+        .then(function(r) {
+          if (r.error || !r.data || !r.data.length) return;
+          var local = loadFromStorage();
+          var localIds = local.reduce(function(m, n) { m[n.id] = true; return m; }, {});
+          var merged = local.slice();
+          r.data.forEach(function(row) {
+            if (!localIds[row.id]) {
+              merged.push({ id: row.id, type: row.type, taskId: row.task_id || '', actor: row.actor, message: row.message, time: row.created_at, read: row.read });
+            }
+          });
+          merged.sort(function(a, b) { return new Date(b.time) - new Date(a.time); });
+          merged = merged.slice(0, MAX_NOTIFS);
+          saveToStorage(merged);
+          if (window.state) state.notifications = merged;
+          updateBadge();
+        });
+    });
+  }
+
   /* push a notification */
   function push(type, taskId, taskTitle, message) {
     var items = loadFromStorage();
@@ -40,6 +108,7 @@
     items.unshift(entry);
     if (items.length > MAX_NOTIFS) items = items.slice(0, MAX_NOTIFS);
     saveToStorage(items);
+    sbInsertNotification(entry);
 
     if (window.state) {
       state.notifications = state.notifications || [];
@@ -59,6 +128,9 @@
         var items = loadFromStorage();
         state.notifications = items;
         updateBadge();
+        /* then try to enrich from Supabase */
+        document.addEventListener('shadowdb:ready', syncFromSupabase, { once: true });
+        if (window.ShadowDB && ShadowDB._sb) syncFromSupabase();
       } else if (++tries > 50) { clearInterval(iv); }
     }, 100);
   }
@@ -146,6 +218,7 @@
         e.stopPropagation();
         var stored = loadFromStorage(); stored.forEach(function(n){n.read=true;}); saveToStorage(stored);
         if (window.state) state.notifications = stored;
+        sbMarkAllRead();
         updateBadge(); renderPanel();
       };
 
@@ -154,6 +227,7 @@
       if (clearAllBtn) clearAllBtn.onclick = function(e) {
         e.stopPropagation(); saveToStorage([]);
         if (window.state) state.notifications = [];
+        sbClearAll();
         updateBadge(); renderPanel();
       };
 
@@ -164,7 +238,7 @@
         if (!li) return;
         var stored = loadFromStorage();
         var item   = stored.find(function(n){ return n.id===li.dataset.id; });
-        if (item) { item.read=true; saveToStorage(stored); if (window.state) state.notifications=stored; }
+        if (item) { item.read=true; saveToStorage(stored); if (window.state) state.notifications=stored; sbMarkOneRead(item.id); }
         updateBadge(); renderPanel();
         var taskId = li.dataset.task;
         if (taskId) {
