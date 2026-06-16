@@ -97,6 +97,12 @@ function setupThemeHandlers() {
             };
             document.documentElement.style.setProperty('--accent', colors[radio.value] || '#4285f4');
             localStorage.setItem('themeColor', radio.value);
+            if (window.ShadowDB && ShadowDB._sb) {
+              ShadowDB._sb.auth.getUser().then(function(res) {
+                var uid = res.data && res.data.user && res.data.user.id;
+                if (uid) ShadowDB._sb.from('users').upsert({ id: uid, theme_color: radio.value, updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(function(){}).catch(function(){});
+              });
+            }
         });
     });
     

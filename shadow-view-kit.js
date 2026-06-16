@@ -108,8 +108,12 @@ SVK.persistState = function (userId, data) {
   try {
     var m = Object.assign({}, SVK.getPersistedState(userId), data);
     localStorage.setItem(SVK.STATE_KEY_PREFIX + (userId||'anon'), JSON.stringify(m));
-    if (window.ShadowDB && window.ShadowDB._sb && userId) {
-      window.ShadowDB._sb.from('user_view_prefs').upsert({user_id:userId,prefs:JSON.stringify(m),updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(){}).catch(function(){});
+    if (window.ShadowDB && window.ShadowDB._sb) {
+      window.ShadowDB._sb.auth.getUser().then(function(res) {
+        var ownerId = res.data && res.data.user && res.data.user.id;
+        if (!ownerId) return;
+        window.ShadowDB._sb.from('user_view_prefs').upsert({ owner_id: ownerId, prefs: m, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' }).then(function(){}).catch(function(){});
+      });
     }
   } catch(e) {}
 };
@@ -1193,8 +1197,12 @@ SVK.persistState = function (userId, data) {
   try {
     var m = Object.assign({}, SVK.getPersistedState(userId), data);
     localStorage.setItem(SVK.STATE_KEY_PREFIX + (userId||'anon'), JSON.stringify(m));
-    if (window.ShadowDB && window.ShadowDB._sb && userId) {
-      window.ShadowDB._sb.from('user_view_prefs').upsert({user_id:userId,prefs:JSON.stringify(m),updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(){}).catch(function(){});
+    if (window.ShadowDB && window.ShadowDB._sb) {
+      window.ShadowDB._sb.auth.getUser().then(function(res) {
+        var ownerId = res.data && res.data.user && res.data.user.id;
+        if (!ownerId) return;
+        window.ShadowDB._sb.from('user_view_prefs').upsert({ owner_id: ownerId, prefs: m, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' }).then(function(){}).catch(function(){});
+      });
     }
   } catch(e) {}
 };

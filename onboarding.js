@@ -161,6 +161,12 @@ const ShadowOnboarding = (() => {
 
   function finishOnboarding() {
     localStorage.setItem('shadow_onboarded', 'true');
+    if (window.ShadowDB && ShadowDB._sb) {
+      ShadowDB._sb.auth.getUser().then(function(res) {
+        var uid = res.data && res.data.user && res.data.user.id;
+        if (uid) ShadowDB._sb.from('users').upsert({ id: uid, onboarded_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: 'id' }).then(function(){}).catch(function(){});
+      });
+    }
     const overlay = document.getElementById('shadow-onboarding');
     if (overlay) {
       overlay.style.animation = 'loginFadeOut 0.3s ease forwards';
