@@ -264,44 +264,63 @@ ALTER TABLE public.approval_settings       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.task_reactions          ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies — owner sees and manages their own rows
-DO $$ DECLARE
-  tbl text;
-  tables text[] := ARRAY[
-    'groups','categories','tags','members','"customFields"','tasks',
-    'comments','activity','settings','users','notifications',
-    'notification_preferences','templates','user_view_prefs',
-    'approval_requests','approval_audit_logs','approval_settings',
-    'task_reactions'
-  ];
-BEGIN
-  FOREACH tbl IN ARRAY tables LOOP
-    EXECUTE format(
-      'CREATE POLICY IF NOT EXISTS "owner_all_%s" ON public.%s
-       FOR ALL USING (auth.uid() = owner_id)
-       WITH CHECK (auth.uid() = owner_id)',
-      regexp_replace(tbl, '[^a-z0-9]', '_', 'g'), tbl
-    );
-  END LOOP;
-END $$;
+-- (DROP IF EXISTS first since CREATE POLICY has no IF NOT EXISTS)
 
--- Special policies for tables with different PK structure
-DROP POLICY IF EXISTS "owner_all_users" ON public.users;
+DROP POLICY IF EXISTS "owner_all_groups"               ON public.groups;
+DROP POLICY IF EXISTS "owner_all_categories"           ON public.categories;
+DROP POLICY IF EXISTS "owner_all_tags"                 ON public.tags;
+DROP POLICY IF EXISTS "owner_all_members"              ON public.members;
+DROP POLICY IF EXISTS "owner_all_customFields"         ON public."customFields";
+DROP POLICY IF EXISTS "owner_all_tasks"                ON public.tasks;
+DROP POLICY IF EXISTS "owner_all_comments"             ON public.comments;
+DROP POLICY IF EXISTS "owner_all_activity"             ON public.activity;
+DROP POLICY IF EXISTS "owner_all_settings"             ON public.settings;
+DROP POLICY IF EXISTS "owner_all_users"                ON public.users;
+DROP POLICY IF EXISTS "owner_all_notifications"        ON public.notifications;
+DROP POLICY IF EXISTS "owner_all_notification_preferences" ON public.notification_preferences;
+DROP POLICY IF EXISTS "owner_all_templates"            ON public.templates;
+DROP POLICY IF EXISTS "owner_all_user_view_prefs"      ON public.user_view_prefs;
+DROP POLICY IF EXISTS "owner_all_approval_requests"    ON public.approval_requests;
+DROP POLICY IF EXISTS "owner_all_approval_audit_logs"  ON public.approval_audit_logs;
+DROP POLICY IF EXISTS "owner_all_approval_settings"    ON public.approval_settings;
+DROP POLICY IF EXISTS "owner_all_task_reactions"       ON public.task_reactions;
+
+CREATE POLICY "owner_all_groups"      ON public.groups
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_categories"  ON public.categories
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_tags"        ON public.tags
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_members"     ON public.members
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_customFields" ON public."customFields"
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_tasks"       ON public.tasks
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_comments"    ON public.comments
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_activity"    ON public.activity
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_settings"    ON public.settings
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_notifications" ON public.notifications
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_templates"   ON public.templates
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+
+-- Tables where the PK is the user id (not owner_id)
 CREATE POLICY "owner_all_users" ON public.users
   FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
-
-DROP POLICY IF EXISTS "owner_all_notification_preferences" ON public.notification_preferences;
 CREATE POLICY "owner_all_notification_preferences" ON public.notification_preferences
   FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
-
-DROP POLICY IF EXISTS "owner_all_user_view_prefs" ON public.user_view_prefs;
 CREATE POLICY "owner_all_user_view_prefs" ON public.user_view_prefs
   FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
-
-DROP POLICY IF EXISTS "owner_all_approval_settings" ON public.approval_settings;
+CREATE POLICY "owner_all_approval_requests" ON public.approval_requests
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "owner_all_approval_audit_logs" ON public.approval_audit_logs
+  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
 CREATE POLICY "owner_all_approval_settings" ON public.approval_settings
   FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
-
-DROP POLICY IF EXISTS "owner_all_task_reactions" ON public.task_reactions;
 CREATE POLICY "owner_all_task_reactions" ON public.task_reactions
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
