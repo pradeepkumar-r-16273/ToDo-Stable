@@ -10,7 +10,7 @@
 
 DO $$
 DECLARE
-  target_email text := 'pradeepkumar.r@zohocorp.com';  -- <-- CHANGE THIS if needed
+  target_email text := 'pradeep@todo.app';  -- <-- CHANGE THIS if needed
   uid uuid;
   now_ts timestamptz := now();
 BEGIN
