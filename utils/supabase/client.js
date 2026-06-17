@@ -2,8 +2,8 @@
 // Returns the shared client once ShadowDB has booted, or creates a new one.
 
 (function () {
-  const SUPABASE_URL = 'https://hnvtowaljdkndhydtngb.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_4gZLAyBXfHnXpFcd4_eH1w_NvIFD-tg';
+  const SUPABASE_URL = window.SUPABASE_CONFIG?.URL || 'https://hnvtowaljdkndhydtngb.supabase.co';
+  const SUPABASE_KEY = window.SUPABASE_CONFIG?.ANON_KEY || 'sb_publishable_4gZLAyBXfHnXpFcd4_eH1w_NvIFD-tg';
 
   function getClient() {
     if (window.ShadowDB && window.ShadowDB._sb) return window.ShadowDB._sb;

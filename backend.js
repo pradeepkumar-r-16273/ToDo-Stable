@@ -28,9 +28,9 @@
 })();
 
 (function () {
-  // 1) Fill these two in:
-  const SUPABASE_URL  = 'https://hnvtowaljdkndhydtngb.supabase.co';
-  const SUPABASE_ANON = 'sb_publishable_4gZLAyBXfHnXpFcd4_eH1w_NvIFD-tg';
+  // Use centralized config from supabase-config.js
+  const SUPABASE_URL  = window.SUPABASE_CONFIG?.URL || 'https://hnvtowaljdkndhydtngb.supabase.co';
+  const SUPABASE_ANON = window.SUPABASE_CONFIG?.ANON_KEY || 'sb_publishable_4gZLAyBXfHnXpFcd4_eH1w_NvIFD-tg';
 
   // Load supabase-js from CDN
   const s = document.createElement('script');
