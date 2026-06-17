@@ -152,22 +152,22 @@ ON CONFLICT (id) DO NOTHING;
 -- SAMPLE COMMENTS (on a few tasks)
 -- ──────────────────────────────────────────────
 INSERT INTO public.comments (id, task_id, owner_id, created_at, updated_at, data) VALUES
-('cmt_01','task_e02',uid,now_ts-'2d'::interval,now_ts-'2d'::interval,'{"body":"JWT implementation looks good. Need to add token rotation on each refresh.","authorName":"You"}')::jsonb),
-('cmt_02','task_e02',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"body":"Token rotation added. PR ready for review tomorrow.","authorName":"You"}')::jsonb),
-('cmt_03','task_e06',uid,now_ts-'3d'::interval,now_ts-'3d'::interval,'{"body":"Stripe v3 migration guide: https://stripe.com/docs/upgrades","authorName":"You"}')::jsonb),
-('cmt_04','task_m02',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"body":"Landing page copy approved by design. Moving to email sequence next.","authorName":"You"}')::jsonb),
-('cmt_05','task_p13',uid,now_ts-'2d'::interval,now_ts-'2d'::interval,'{"body":"Decided to use Chart.js for visualizations. Lightweight and well-documented.","authorName":"You"}')::jsonb)
+('cmt_01','task_e02',uid,now_ts-'2d'::interval,now_ts-'2d'::interval,'{"body":"JWT implementation looks good. Need to add token rotation on each refresh.","authorName":"You"}'),
+('cmt_02','task_e02',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"body":"Token rotation added. PR ready for review tomorrow.","authorName":"You"}'),
+('cmt_03','task_e06',uid,now_ts-'3d'::interval,now_ts-'3d'::interval,'{"body":"Stripe v3 migration guide: https://stripe.com/docs/upgrades","authorName":"You"}'),
+('cmt_04','task_m02',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"body":"Landing page copy approved by design. Moving to email sequence next.","authorName":"You"}'),
+('cmt_05','task_p13',uid,now_ts-'2d'::interval,now_ts-'2d'::interval,'{"body":"Decided to use Chart.js for visualizations. Lightweight and well-documented.","authorName":"You"}')
 ON CONFLICT (id) DO NOTHING;
 
 -- ──────────────────────────────────────────────
 -- SAMPLE ACTIVITY
 -- ──────────────────────────────────────────────
 INSERT INTO public.activity (id, task_id, owner_id, created_at, updated_at, data) VALUES
-('act_01','task_e03',uid,now_ts-'5d'::interval,now_ts-'5d'::interval,'{"action":"status_changed","actor":"You","from":"in-progress","to":"done","message":"Marked as done"}')::jsonb),
-('act_02','task_e08',uid,now_ts-'8d'::interval,now_ts-'8d'::interval,'{"action":"status_changed","actor":"You","from":"todo","to":"done","message":"Security fix deployed to production"}')::jsonb),
-('act_03','task_e02',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"action":"comment_added","actor":"You","message":"Added a comment"}')::jsonb),
-('act_04','task_m03',uid,now_ts-'7d'::interval,now_ts-'7d'::interval,'{"action":"status_changed","actor":"You","from":"in-progress","to":"done","message":"Report delivered to leadership"}')::jsonb),
-('act_05','task_e19',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"action":"status_changed","actor":"You","from":"in-progress","to":"review","message":"Moved to review"}')::jsonb)
+('act_01','task_e03',uid,now_ts-'5d'::interval,now_ts-'5d'::interval,'{"action":"status_changed","actor":"You","from":"in-progress","to":"done","message":"Marked as done"}'),
+('act_02','task_e08',uid,now_ts-'8d'::interval,now_ts-'8d'::interval,'{"action":"status_changed","actor":"You","from":"todo","to":"done","message":"Security fix deployed to production"}'),
+('act_03','task_e02',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"action":"comment_added","actor":"You","message":"Added a comment"}'),
+('act_04','task_m03',uid,now_ts-'7d'::interval,now_ts-'7d'::interval,'{"action":"status_changed","actor":"You","from":"in-progress","to":"done","message":"Report delivered to leadership"}'),
+('act_05','task_e19',uid,now_ts-'1d'::interval,now_ts-'1d'::interval,'{"action":"status_changed","actor":"You","from":"in-progress","to":"review","message":"Moved to review"}')
 ON CONFLICT (id) DO NOTHING;
 
 RAISE NOTICE 'Seed complete: 3 groups, 100 tasks, 5 comments, 5 activity records inserted for user %', uid;
