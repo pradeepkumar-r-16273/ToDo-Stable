@@ -1,8 +1,8 @@
 // auth.js v3 - Supabase Auth only. No localStorage for users/passwords/sessions.
 const ShadowAuth = (() => {
   'use strict';
-  const SUPABASE_URL  = 'https://ycysvoolkezntbxcfrnq.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljeXN2b29sa2V6bnRieGNmcm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzY5MjksImV4cCI6MjA5MjAxMjkyOX0.Y0OFF8Bdc3iSp_Bm9G7Io3Szy0amnHVuO3k8nspqxCk';
+  const SUPABASE_URL  = 'https://hnvtowaljdkndhydtngb.supabase.co';
+  const SUPABASE_ANON = 'sb_publishable_4gZLAyBXfHnXpFcd4_eH1w_NvIFD-tg';
   const ROLE_COLORS={admin:'#667eea',member:'#48bb78',viewer:'#ed8936'};
   const ROLE_LABELS={admin:'Admin',member:'Member',viewer:'Viewer'};
   const DEFAULT_PERMS={admin:{createTask:true,editTask:true,deleteTask:true,createGroup:true,editGroup:true,deleteGroup:true,assignTask:true,manageUsers:true,viewAll:true},member:{createTask:true,editTask:true,deleteTask:false,createGroup:true,editGroup:true,deleteGroup:false,assignTask:true,manageUsers:false,viewAll:false},viewer:{createTask:false,editTask:false,deleteTask:false,createGroup:false,editGroup:false,deleteGroup:false,assignTask:false,manageUsers:false,viewAll:false}};
