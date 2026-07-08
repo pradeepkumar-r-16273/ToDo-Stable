@@ -8,6 +8,23 @@
 
   var LS_KEY = 'shadow_local_db';
 
+  // ── Purge leftover login/multi-user artifacts ──────────────────────────────────
+  // Login is removed. Files like shadow-user-access.js read a stale `shadow_session`
+  // and then filter every group/task out of view (the "loads then hides" bug).
+  // Clearing these on every load keeps the app in clean single-user local mode.
+  // NOTE: 'shadow_local_db' (our data) and 'shadow-theme' are deliberately kept.
+  (function purgeStale() {
+    var kill = ['shadow_session', 'shadow_users', 'shadow_rbac_current_user',
+                'shadow_sb_auth', 'supabase.auth.token'];
+    try {
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var k = localStorage.key(i);
+        if (!k) continue;
+        if (kill.indexOf(k) >= 0 || /^sb-.*-auth-token$/.test(k)) localStorage.removeItem(k);
+      }
+    } catch (e) {}
+  })();
+
   // ── Storage helpers ────────────────────────────────────────────────────────
   function loadDB() {
     try { return JSON.parse(localStorage.getItem(LS_KEY)) || null; } catch (e) { return null; }
