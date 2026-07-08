@@ -281,15 +281,21 @@
   window.SHADOW_DEV_MEMBERS = MEMBERS.slice();
 
   // ── Neutralize ShadowAuth (no login) once it exists ─────────────────────────────
+  // NOTE: auth.js declares `const ShadowAuth`, which does NOT attach to window in a
+  // classic script. Reference it by its bare (global-lexical) name, not window.*.
   function patchAuth() {
-    if (!window.ShadowAuth) return;
-    ShadowAuth.getOrgMembers  = function () { return MEMBERS.slice(); };
-    ShadowAuth.getCurrentUser = function () { return DEV_USER; };
-    ShadowAuth.isLoggedIn     = function () { return true; };
-    ShadowAuth.getRole        = function () { return DEV_USER.role; };
-    ShadowAuth.hasPermission  = function () { return true; };
-    ShadowAuth.checkAuth      = function () { return Promise.resolve(true); };
-    ShadowAuth.renderLoginScreen = function () {};
+    var A = (typeof ShadowAuth !== 'undefined') ? ShadowAuth
+          : (typeof window !== 'undefined' ? window.ShadowAuth : null);
+    if (!A) return;
+    A.getOrgMembers  = function () { return MEMBERS.slice(); };   // sync array (app doesn't await it)
+    A.getCurrentUser = function () { return DEV_USER; };
+    A.isLoggedIn     = function () { return true; };
+    A.getRole        = function () { return DEV_USER.role; };
+    A.hasPermission  = function () { return true; };
+    A.checkAuth      = function () { return Promise.resolve(true); };
+    A.renderLoginScreen = function () {};
+    A.logout         = function () { try { localStorage.removeItem(LS_KEY); } catch (e) {} location.reload(); };
+    try { window.ShadowAuth = A; } catch (e) {}   // also expose on window for other callers
   }
 
   // Fire the ready event after the DOM (and app.js listeners) are in place.

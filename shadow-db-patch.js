@@ -472,6 +472,11 @@
 
   async function runPatch(attempt) {
     attempt = attempt || 1;
+    // Local-only mode (no Supabase): nothing to sync, skip the retry loop.
+    if (window.ShadowDB && window.ShadowDB._local) {
+      console.log('[ShadowPatch] Local mode — skipping profile sync');
+      return;
+    }
     var profiles = await loadProfilesFromDB();
     var count = (profiles && typeof profiles === 'object') ? Object.keys(profiles).length : 0;
 
