@@ -6,11 +6,11 @@
 
   // ===== STATE =====
   const state = {
-    currentView: 'agenda',
+    currentView: 'unified',
     currentDisplay: 'board',   // 'board' | 'list'
     sortBy: 'dueDate',
     sortDir: 'desc',
-    groupBy: 'dueDate',
+    groupBy: 'group',
     filterGroup: null,
     filterTag: null,
     filterAssignee: null,
