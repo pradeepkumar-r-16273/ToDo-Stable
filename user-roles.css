@@ -1,0 +1,105 @@
+/* user-roles.css — Roles & Permission Management UI (additive, scoped to .ur-*) */
+
+/* Role badge */
+.ur-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
+  padding:1px 8px;border-radius:10px;color:var(--ur-c,#64748b);
+  background:color-mix(in srgb, var(--ur-c,#64748b) 14%, transparent);
+  border:1px solid color-mix(in srgb, var(--ur-c,#64748b) 34%, transparent);vertical-align:middle;}
+.ur-badge i{font-size:10px}
+
+/* Overlay + dialog */
+.ur-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100000;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+.ur-dialog{background:var(--bg-primary,#fff);color:var(--text-primary,#1f2937);
+  width:100%;max-width:760px;max-height:88vh;border-radius:16px;overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.35);}
+.dark-theme .ur-dialog{background:#1e293b;color:#e2e8f0}
+
+.ur-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border-color,#e5e7eb);}
+.ur-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ur-title i{color:#4285f4}
+.ur-group-wrap{margin-left:auto;font-size:13px;color:var(--text-secondary,#64748b)}
+.ur-close{background:none;border:none;font-size:26px;line-height:1;cursor:pointer;color:var(--text-secondary,#94a3b8);padding:0 4px}
+.ur-close:hover{color:#ef4444}
+
+.ur-tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--border-color,#e5e7eb)}
+.ur-tab{background:none;border:none;padding:12px 16px;font-size:13px;font-weight:600;cursor:pointer;
+  color:var(--text-secondary,#64748b);border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
+.ur-tab:hover{color:var(--text-primary,#1f2937)}
+.ur-tab.active{color:#4285f4;border-bottom-color:#4285f4}
+
+.ur-body{padding:18px 20px;overflow:auto}
+.ur-section{display:flex;flex-direction:column;gap:12px}
+.ur-desc{font-size:12.5px;color:var(--text-secondary,#64748b);margin:0}
+
+.ur-foot{display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid var(--border-color,#e5e7eb);
+  font-size:12.5px;background:var(--bg-secondary,#f8fafc)}
+.dark-theme .ur-foot{background:#0f172a}
+.ur-foot-note{color:var(--text-secondary,#94a3b8);margin-left:auto}
+
+/* Inputs */
+.ur-select,.ur-input{padding:7px 10px;border:1px solid var(--border-color,#d1d5db);border-radius:8px;
+  font-size:13px;background:var(--bg-primary,#fff);color:inherit;outline:none;max-width:100%}
+.dark-theme .ur-select,.dark-theme .ur-input{background:#0f172a;border-color:#334155}
+.ur-input{width:100%;box-sizing:border-box}
+
+/* Members table */
+.ur-table{width:100%;border-collapse:collapse;font-size:13px}
+.ur-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary,#94a3b8);
+  padding:8px 10px;border-bottom:1px solid var(--border-color,#e5e7eb)}
+.ur-table td{padding:10px;border-bottom:1px solid var(--border-color,#f1f5f9);vertical-align:middle}
+.ur-user{display:flex;align-items:center;gap:10px}
+.ur-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+.ur-email{color:var(--text-secondary,#64748b)}
+
+/* Permission tab */
+.ur-perm-row{padding:12px 0;border-bottom:1px solid var(--border-color,#f1f5f9)}
+.ur-perm-q{font-size:13.5px;font-weight:600;margin-bottom:8px}
+.ur-perm-opts{display:flex;flex-wrap:wrap;gap:14px}
+.ur-radio,.ur-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.ur-picker{margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;padding:10px;border:1px dashed var(--border-color,#cbd5e1);border-radius:8px}
+.ur-banner{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:10px 12px;border-radius:8px;
+  background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.dark-theme .ur-banner{background:rgba(59,130,246,.12);color:#93c5fd;border-color:rgba(59,130,246,.3)}
+.ur-banner-muted{background:var(--bg-secondary,#f8fafc);color:var(--text-secondary,#64748b);border-color:var(--border-color,#e5e7eb)}
+
+/* Custom roles */
+.ur-crole-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ur-crole{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;
+  border:1px solid var(--border-color,#e5e7eb);border-radius:10px;margin-top:8px}
+.ur-crole-actions{display:flex;gap:8px}
+.ur-btn{background:#4285f4;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.ur-btn:hover{filter:brightness(.95)}
+.ur-btn[disabled]{opacity:.5;cursor:not-allowed}
+.ur-btn.ur-ghost{background:transparent;color:var(--text-secondary,#64748b);border:1px solid var(--border-color,#d1d5db)}
+.ur-btn-sm{background:var(--bg-secondary,#f1f5f9);border:1px solid var(--border-color,#e5e7eb);border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;color:inherit}
+.ur-btn-sm.ur-danger{color:#ef4444;border-color:#fecaca;background:#fef2f2}
+.dark-theme .ur-btn-sm.ur-danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3)}
+
+/* Custom role builder */
+.ur-builder{margin-top:14px;padding:16px;border:1px solid var(--border-color,#e5e7eb);border-radius:12px;background:var(--bg-secondary,#f8fafc);display:flex;flex-direction:column;gap:14px}
+.dark-theme .ur-builder{background:#0f172a}
+.ur-field{display:flex;flex-direction:column;gap:6px}
+.ur-field label{font-size:12px;font-weight:600;color:var(--text-secondary,#64748b)}
+.ur-matrix{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.ur-cat{border:1px solid var(--border-color,#e5e7eb);border-radius:10px;padding:12px;background:var(--bg-primary,#fff)}
+.dark-theme .ur-cat{background:#1e293b}
+.ur-cat-title{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#4285f4;font-weight:700;margin-bottom:8px}
+.ur-cat .ur-chk{display:flex;padding:5px 0}
+.ur-builder-actions{display:flex;gap:10px}
+
+/* ── DOM masking (hide unauthorized actions) ── */
+body.ur-no-delete [data-action="delete"],
+body.ur-no-delete .task-delete-btn,
+body.ur-no-delete .fa-trash{ }               /* delete controls hidden contextually via JS + below */
+body.ur-viewer-mode #newTaskBtn{display:none !important}
+body.ur-viewer-mode .ntm-subtask-add-btn,
+body.ur-viewer-mode #addGroupBtn,
+body.ur-viewer-mode #addTagBtn{display:none !important}
+/* Viewer read-only: strip edit affordances on task detail fields */
+body.ur-viewer-mode #detailTitle,
+body.ur-viewer-mode #detailDesc,
+body.ur-viewer-mode #detailNotes{pointer-events:none;background:transparent !important;border-color:transparent !important}
+body.ur-viewer-mode #commentInput{display:none}
