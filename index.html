@@ -7,14 +7,14 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>ToDo</title>
-  <link rel="stylesheet" href="styles.css?v=20260618a">
-  <link rel="stylesheet" href="settings.css?v=20260618a">
-  <link rel="stylesheet" href="approval.css?v=20260618a">
-    <link rel="stylesheet" href="auth.css?v=20260618a">
-  <link rel="stylesheet" href="admin.css?v=20260618a">
+  <link rel="stylesheet" href="styles.css?v=20260618b">
+  <link rel="stylesheet" href="settings.css?v=20260618b">
+  <link rel="stylesheet" href="approval.css?v=20260618b">
+    <link rel="stylesheet" href="auth.css?v=20260618b">
+  <link rel="stylesheet" href="admin.css?v=20260618b">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="rbac.css?v=20260618a">
-  <link rel="stylesheet" href="user-roles.css?v=20260618a">
+  <link rel="stylesheet" href="rbac.css?v=20260618b">
+  <link rel="stylesheet" href="user-roles.css?v=20260618b">
 </head>
 <body>
   <script>
@@ -315,26 +315,26 @@
     <div id="ntmAssigneeList"></div>
   </div>
 </div>
-    <script src="local-backend.js?v=20260618a"></script>
-    <script src="shadow-auth-gate.js?v=20260618a"></script>
-  <script src="approval-backend.js?v=20260618a"></script>
-  <script src="approval-ui.js?v=20260618a"></script>
-  <script src="agenda-view.js?v=20260618a"></script>
-  <script src="myday-view.js?v=20260618a"></script>
-  <script src="createdbyme-view.js?v=20260618a"></script>
-  <script src="app.js?v=20260618a"></script>
-  <script src="group-ui.js?v=20260618a"></script>
-    <script src="auth.js?v=20260618a"></script>
-    <script src="onboarding.js?v=20260618a"></script>
-      <script src="task-enhancements.js?v=20260618a"></script>
-  <script src="workflow-engine.js?v=20260618a"></script>
-  <script src="workflow-builder.js?v=20260618a"></script>
-  <script src="shadow-workflow-patch.js?v=20260618a"></script>
-  <script src="shadow-workflow-backend.js?v=20260618a"></script>
- <script src="rbac.js?v=20260618a"></script>
-<script src="shadow-db-patch.js?v=20260618a"></script>
-  <script src="theme.js?v=20260618a"></script>
-  <script src="admin.js?v=20260618a"></script>
+    <script src="local-backend.js?v=20260618b"></script>
+    <script src="shadow-auth-gate.js?v=20260618b"></script>
+  <script src="approval-backend.js?v=20260618b"></script>
+  <script src="approval-ui.js?v=20260618b"></script>
+  <script src="agenda-view.js?v=20260618b"></script>
+  <script src="myday-view.js?v=20260618b"></script>
+  <script src="createdbyme-view.js?v=20260618b"></script>
+  <script src="app.js?v=20260618b"></script>
+  <script src="group-ui.js?v=20260618b"></script>
+    <script src="auth.js?v=20260618b"></script>
+    <script src="onboarding.js?v=20260618b"></script>
+      <script src="task-enhancements.js?v=20260618b"></script>
+  <script src="workflow-engine.js?v=20260618b"></script>
+  <script src="workflow-builder.js?v=20260618b"></script>
+  <script src="shadow-workflow-patch.js?v=20260618b"></script>
+  <script src="shadow-workflow-backend.js?v=20260618b"></script>
+ <script src="rbac.js?v=20260618b"></script>
+<script src="shadow-db-patch.js?v=20260618b"></script>
+  <script src="theme.js?v=20260618b"></script>
+  <script src="admin.js?v=20260618b"></script>
 
   </script>
 
@@ -773,6 +773,8 @@
                         <div class="group-detail-tabs">
                             <button class="group-tab active" data-tab="general">General</button>
                             <button class="group-tab" data-tab="members">Members</button>
+                            <button class="group-tab" data-tab="memberRoles">Member Roles</button>
+                            <button class="group-tab" data-tab="permissionMgmt">Permission Management</button>
                             <button class="group-tab" data-tab="taskSettings">Task Settings</button>
                         </div>
                         
@@ -820,7 +822,17 @@
                                 <!-- Members populated by JS -->
                             </div>
                         </div>
-                        
+
+                        <!-- Member Roles Tab (role assignment + custom roles) -->
+                        <div class="group-tab-content" id="tab-memberRoles">
+                            <div id="memberRolesMount"></div>
+                        </div>
+
+                        <!-- Permission Management Tab (action-level permissions) -->
+                        <div class="group-tab-content" id="tab-permissionMgmt">
+                            <div id="permissionMgmtMount"></div>
+                        </div>
+
                         <!-- Task Settings Tab -->
                         <div class="group-tab-content" id="tab-taskSettings">
                             <div class="task-settings-layout">
@@ -832,7 +844,6 @@
                                     <div class="task-settings-nav-item" data-tsection="customFields">Custom fields</div>
                                     <div class="task-settings-nav-item" data-tsection="otherSettings">Other settings</div>
                 <div class="task-settings-nav-item" data-tsection="approvals">Rules & Approvals</div>
-                <div class="task-settings-nav-item" data-tsection="roles">Roles &amp; Permissions</div>
                                 </div>
                                 <div class="task-settings-content">
                                     <!-- Category -->
@@ -893,12 +904,6 @@
                 <p class="settings-description">Configure the approval workflow for tasks in this group. Only group admins can manage these settings.</p>
                 <div id="approvalSettingsMount"></div>
               </div>
-              <!-- Roles & Permissions (this group) -->
-              <div class="task-settings-section" id="tsection-roles">
-                <h2>Roles &amp; Permissions</h2>
-                <p class="settings-description">Manage member roles, action-level permissions, and custom roles for this group. Settings apply only to this group.</p>
-                <div id="rolesSettingsMount"></div>
-              </div>
               <!-- Other Settings -->
               <div class="task-settings-section" id="tsection-otherSettings">
                                         <h2>Other settings</h2>
@@ -943,8 +948,8 @@
                 </div></div>
         </div>
     </div>
-  <script src="settings.js?v=20260618a"></script>
-<script src="task-form-fixes.js?v=20260618a"></script>
+  <script src="settings.js?v=20260618b"></script>
+<script src="task-form-fixes.js?v=20260618b"></script>
   <script>
     (function() {
       function patchSettingsClose() {
@@ -975,13 +980,13 @@
       }
     })();
   </script>
-<script src="shadow-view-kit.js?v=20260618a"></script>
-  <script src="shadow-user-access.js?v=20260618a"></script>  <script src="shadow-agenda-fix.js?v=20260618a"></script><script src="shadow-approval-patch.js?v=20260618a"></script>
-  <script src="task-likes.js?v=20260618a"></script>
-  <script src="notification-settings.js?v=20260618a"></script>
-  <script src="notification-bell.js?v=20260618a"></script>
-  <script src="task-templates.js?v=20260618a"></script>
-  <script src="user-roles.js?v=20260618a"></script>
-  <script src="user-roles-ui.js?v=20260618a"></script>
+<script src="shadow-view-kit.js?v=20260618b"></script>
+  <script src="shadow-user-access.js?v=20260618b"></script>  <script src="shadow-agenda-fix.js?v=20260618b"></script><script src="shadow-approval-patch.js?v=20260618b"></script>
+  <script src="task-likes.js?v=20260618b"></script>
+  <script src="notification-settings.js?v=20260618b"></script>
+  <script src="notification-bell.js?v=20260618b"></script>
+  <script src="task-templates.js?v=20260618b"></script>
+  <script src="user-roles.js?v=20260618b"></script>
+  <script src="user-roles-ui.js?v=20260618b"></script>
 </body>
 </html>
