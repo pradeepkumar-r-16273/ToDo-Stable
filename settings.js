@@ -270,6 +270,7 @@ function capitalize(str){ return str?str.charAt(0).toUpperCase()+str.slice(1):''
 function openGroupDetail(groupId){
   const group=groupsData.find(g=>g.id===groupId); if(!group) return;
   currentGroupId=groupId;
+  window.currentGroupId=groupId; // expose for the Roles & Permissions panel (user-roles-ui.js)
   document.getElementById('groupsListView').classList.add('hidden');
   document.getElementById('groupDetailView').classList.remove('hidden');
   const t=document.querySelector('.group-detail-title'); if(t) t.textContent=group.name;
