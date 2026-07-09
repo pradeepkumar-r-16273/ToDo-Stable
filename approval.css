@@ -709,3 +709,34 @@
   .form-select, .form-textarea { font-size: 16px; }
   .decision-btn { width: 100%; justify-content: center; padding: 10px; }
 }
+
+/* ── Approval Workflow rebuild (PRD) — Hub + badge + acting-as ── */
+.ap-avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;color:#fff;font-size:11px;font-weight:700}
+.audit-role{color:var(--text-secondary,#94a3b8);font-size:11px}
+
+/* RHS hub icon badge */
+#approvalsHubBtn{position:relative}
+.ap-hub-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#ea4335;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+
+/* Hub dialog */
+.modal-content.ap-hub{width:620px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column}
+.ap-hub-header{display:flex;align-items:center;gap:12px}
+.ap-hub-header .ap-actas{margin-left:auto;font-size:12px;font-weight:400;color:var(--text-secondary,#64748b);display:flex;align-items:center;gap:6px}
+.ap-hub-header .ap-actas .form-select{padding:4px 8px;font-size:12px}
+.ap-hub-close{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:#fff;opacity:.9}
+.ap-hub-tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--border-color,#e5e7eb)}
+.ap-hub-tab{background:none;border:none;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-secondary,#64748b);border-bottom:2px solid transparent}
+.ap-hub-tab.active{color:#4285f4;border-bottom-color:#4285f4}
+.ap-hub-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary,#94a3b8);font-weight:700;margin:14px 0 6px}
+.ap-hub-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border-color,#e5e7eb);border-radius:10px;margin-bottom:8px}
+.ap-hub-row-main{flex:1;min-width:0}
+.ap-hub-task{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-hub-meta{font-size:12px;color:var(--text-secondary,#64748b);margin-top:2px}
+.ap-hub-actions{display:flex;gap:6px;flex-shrink:0}
+.ap-hub-actions .decision-btn{padding:5px 10px;font-size:12px}
+.ap-status{font-weight:600}
+.ap-status.pending_approval{color:#ea4335}
+.ap-status.approved{color:#34a853}
+.ap-status.rejected{color:#ea4335}
+.ap-status.changes_requested{color:#f59e0b}
+.ap-status.aborted{color:#718096}
