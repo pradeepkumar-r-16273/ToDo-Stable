@@ -740,3 +740,10 @@
 .ap-status.rejected{color:#ea4335}
 .ap-status.changes_requested{color:#f59e0b}
 .ap-status.aborted{color:#718096}
+
+/* Approval section inside the redesigned task modal (#taskModal) */
+#ntmApprovalSection{display:flex;flex-direction:column;gap:10px}
+#ntmApprovalSection:empty{display:none}
+#taskModal .field-locked{opacity:.55;pointer-events:none;position:relative}
+#taskModal .ntm-topbar-actions .approval-btn.request{background:#4285f4;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+#taskModal .ntm-topbar-actions .approval-btn.resubmit{background:#f59e0b;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}

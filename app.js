@@ -781,6 +781,8 @@ function renderListView() {
   function showTaskDetail(taskId, source) {
     const task = state.tasks.find(function(t){return t.id===taskId;});
     if (!task) return;
+    // Redesigned task view: open the centered create-task-style modal (edit mode).
+    if (window.openTaskEditModal) { window.openTaskEditModal(taskId); return; }
     state.selectedTaskId = taskId;
 
     const panel = document.getElementById('taskDetailPanel');
@@ -1551,6 +1553,7 @@ function renderListView() {
     var grpStatuses = DEFAULT_STATUSES.slice();
     var mtSubtasks  = [];
     var grpCats     = [{ name:'General' }];
+    var editingTaskId = null;   // when set, the modal is editing an existing task (not creating)
 
     // ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ status ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ
     function getStatusColor(name) {
@@ -2063,7 +2066,7 @@ function renderListView() {
           document.body.appendChild(tip); setTimeout(function(){tip.remove();},2000); return;
         }
         var catLbl = $el('ntmCatLabel');
-        var task = {
+        var fields = {
           title: title,
           description: ($el('modalDesc')||{}).value||'',
           status: selStatus,
@@ -2078,24 +2081,56 @@ function renderListView() {
           recurrence: window.state?window.state.modalRecurrence||null:null,
           reminder: window.state?window.state.modalReminder||null:null,
           attachments: window.state?(window.state.modalAttachments||[]).slice():[],
+          modifiedDate: new Date().toISOString()
+        };
+
+        // ── EDIT existing task ───────────────────────────────────────────────
+        if (editingTaskId) {
+          var existing = (window.state && window.state.tasks || []).find(function(t){ return t.id===editingTaskId; }) || {};
+          var gid = fields.group || existing.group;
+          // Mandate approval: block moving to Completed/Closed until approved
+          if ((fields.status==='Completed' || fields.status==='Closed') &&
+              window.ApprovalWorkflow && ApprovalWorkflow.TaskLock) {
+            var chk = ApprovalWorkflow.TaskLock.validateTaskCompletion(editingTaskId, gid);
+            if (!chk.allowed) {
+              if (confirm(chk.reason + '\n\nSend this task for approval now?')) {
+                if (window.ApprovalUI && ApprovalUI.injectInTask) { /* request modal opens via header button */ }
+                var t2 = (window.state.tasks||[]).find(function(t){return t.id===editingTaskId;});
+                if (t2 && window.__openApprovalRequest) window.__openApprovalRequest(t2, gid);
+              }
+              return; // do not save the disallowed status change
+            }
+          }
+          var merged = Object.assign({}, existing, fields, { id: editingTaskId });
+          await ShadowDB.Tasks.update(merged);
+          if (window.state) window.state.tasks = await ShadowDB.Tasks.getAll();
+          $el('taskModal').style.display='none';
+          editingTaskId = null; if (window.state) window.state.selectedTaskId = null;
+          if (window.state) { window.state.modalSubtasks=[]; window.state.modalTags=[]; window.state.modalAttachments=[]; window.state.modalRecurrence=null; window.state.modalReminder=null; }
+          if (typeof renderSidebar==='function') renderSidebar();
+          if (typeof renderView==='function') renderView();
+          return;
+        }
+
+        // ── CREATE new task ──────────────────────────────────────────────────
+        var task = Object.assign({}, fields, {
           createdBy: window.state?window.state.currentUserId:null,
           createdAt: new Date().toISOString(),
-          modifiedDate: new Date().toISOString(),
           activity: []
-        };
+        });
         var created = await ShadowDB.Tasks.create(task);
         if (window.state) window.state.tasks = await ShadowDB.Tasks.getAll();
         $el('taskModal').style.display='none';
         if (window.state) { window.state.modalSubtasks=[]; window.state.modalTags=[]; window.state.modalAttachments=[]; window.state.modalRecurrence=null; window.state.modalReminder=null; }
         if (typeof renderSidebar==='function') renderSidebar();
         if (typeof renderView==='function') renderView();
-        if (created&&created.id&&typeof showTaskDetail==='function') showTaskDetail(created.id,'panel');
       });
     }
 
     // ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ cancel / close ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ
     function closeModal() {
       var m=$el('taskModal'); if(m) m.style.display='none';
+      editingTaskId = null; if (window.state) window.state.selectedTaskId = null;
       closeAllDropdowns(); var am=$el('ntmAssigneeModal'); if(am) am.classList.remove('open');
     }
     var cancelBtn=$el('modalCancelBtn'); if(cancelBtn) cancelBtn.addEventListener('click',closeModal);
@@ -2113,6 +2148,8 @@ function renderListView() {
 
     // ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ reset & open ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ
     function resetAndOpen(opts) {
+      editingTaskId = null;
+      var _sb = $el('modalSaveBtn'); if (_sb) _sb.textContent = 'Save';
       selGroupId=''; selStatus='Open'; selPriority='Medium'; selTags=[]; mtSubtasks=[]; selAssignee='';
       if (window.state && window.state.members && window.state.members.length) {
         var owner = window.state.members.find(function(m){ return m.role==='Owner'||m.role==='admin'||m.role==='owner'; });
@@ -2177,6 +2214,47 @@ function renderListView() {
       var m=$el('taskModal'); if(m) m.style.display='flex';
       if($el('modalTaskTitle')) $el('modalTaskTitle').focus();
     }
+
+    // ── open the modal to VIEW / EDIT an existing task (redesigned task view) ──
+    function openForEdit(taskId) {
+      var task = (window.state && window.state.tasks || []).find(function(t){ return t.id===taskId; });
+      if (!task) return;
+      var gid = task.group || task.groupId || '';
+      // initialise group-dependent lists (statuses/categories) for this task's group
+      resetAndOpen({ groupId: gid });
+      editingTaskId = taskId;
+      if (window.state) window.state.selectedTaskId = taskId;
+
+      // Title / description
+      if ($el('modalTaskTitle')) $el('modalTaskTitle').value = task.title || '';
+      if ($el('modalDesc')) $el('modalDesc').value = task.description || '';
+      // Category
+      if (task.category) { var cl=$el('ntmCatLabel'); if (cl) cl.textContent = task.category; var hc=$el('modalCategory'); if(hc) hc.value=task.category; }
+      // Status / priority
+      selStatus = task.status || 'Open'; updateStatusBtn();
+      selPriority = task.priority || 'Medium'; updatePriorityBtn();
+      // Assignee (keep raw value for save; show resolved display name in the chip)
+      selAssignee = task.assignee || selAssignee; updateAssigneeChip();
+      if ($el('ntmAssigneeName') && selAssignee) {
+        var _mem = (window.state && window.state.members || []).find(function(m){ return m.id===selAssignee || m.name===selAssignee; });
+        $el('ntmAssigneeName').textContent = _mem ? _mem.name : selAssignee;
+        if (_mem && $el('ntmAssigneeAvatar')) { $el('ntmAssigneeAvatar').textContent = _mem.avatar || (_mem.name||'?')[0]; if (_mem.color) $el('ntmAssigneeAvatar').style.background = _mem.color; }
+      }
+      // Dates
+      selStartDate = task.startDate || null; selDueDate = task.dueDate || null;
+      if ($el('ntmStartVal')) $el('ntmStartVal').textContent = selStartDate ? (typeof fmtDateDisp==='function'?fmtDateDisp(selStartDate):selStartDate) : 'Yet to set';
+      if ($el('ntmDueVal')) $el('ntmDueVal').textContent = selDueDate ? (typeof fmtDateDisp==='function'?fmtDateDisp(selDueDate):selDueDate) : 'Yet to set';
+      // Tags
+      selTags = Array.isArray(task.tags) ? task.tags.slice() : []; renderTagsBar();
+      // Subtasks (normalise done→completed)
+      mtSubtasks = (Array.isArray(task.subtasks)?task.subtasks:[]).map(function(s){ return { id:s.id||Date.now()+Math.random(), title:s.title||'', completed:(s.completed!=null?s.completed:!!s.done), assignee:s.assignee||selAssignee }; });
+      renderSubtasksList();
+      // Save button reflects edit
+      var sb=$el('modalSaveBtn'); if (sb) sb.textContent = 'Save';
+      // Let approval UI mount immediately
+      try { document.dispatchEvent(new CustomEvent('task:modal:opened', { detail:{ taskId: taskId } })); } catch(e){}
+    }
+    window.openTaskEditModal = openForEdit;
 
     // Wire New Task button
     var newTaskBtn = $el('newTaskBtn');

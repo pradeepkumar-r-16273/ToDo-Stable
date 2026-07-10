@@ -102,32 +102,36 @@
     host.appendChild(renderConfigPanel(gid));
   }
 
-  // ── In-task approval UI ─────────────────────────────────────────────────────────
+  // ── In-task approval UI (mounted inside the centered #taskModal) ─────────────────
+  // Fields locked while an approval is pending (the modal's real controls).
+  var LOCK_EL_IDS = ['modalTaskTitle', 'ntmStatusBtn', 'ntmAssigneeChip', 'ntmDueVal', 'ntmPriorityBtn'];
+
   function clearInTask() {
     ['apStatusStrip', 'apDecisionPanel', 'apAuditTrail', 'apLockBanner'].forEach(function (id) {
       var e = document.getElementById(id); if (e) e.remove();
     });
     ['apRequestBtn', 'apResubmitBtn', 'apAbortBtn'].forEach(function (id) {
-      var e = document.querySelector('.tdp-header-actions #' + id); if (e) e.remove();
+      var e = document.querySelector('.ntm-topbar-actions #' + id); if (e) e.remove();
     });
-    ['detailTitle', 'detailStatus', 'detailAssignee', 'detailDueDate', 'detailPriority'].forEach(function (id) {
-      var e = document.getElementById(id); if (e) e.classList.remove('field-locked');
-    });
+    LOCK_EL_IDS.forEach(function (id) { var e = document.getElementById(id); if (e) e.classList.remove('field-locked'); });
+  }
+
+  function modalOpen() {
+    var m = document.getElementById('taskModal');
+    return m && getComputedStyle(m).display !== 'none';
   }
 
   function injectInTask() {
     var W = AW(); if (!W) return;
-    var panel = document.getElementById('taskDetailPanel');
-    var open = panel && (panel.classList.contains('open') || panel.style.display === 'flex');
     var taskId = window.state && window.state.selectedTaskId;
-    if (!open || !taskId) { clearInTask(); return; }
+    if (!modalOpen() || !taskId) { clearInTask(); return; }
     var task = taskById(taskId); if (!task) return;
     var gid = task.group || task.groupId;
     clearInTask();
     if (!W.Settings.isEnabled(gid)) return;
 
-    var body = panel.querySelector('.tdp-body'); if (!body) return;
-    var headerActions = panel.querySelector('.tdp-header-actions');
+    var section = document.getElementById('ntmApprovalSection'); if (!section) return;
+    var headerActions = document.querySelector('#taskModal .ntm-topbar-actions');
     var me = actingUserId();
     var active = W.Requests.getActiveForTask(taskId);
     var latest = W.Requests.getLatestForTask(taskId);
@@ -140,44 +144,36 @@
       strip.id = 'apStatusStrip'; strip.className = 'approval-status-strip pending';
       strip.innerHTML = '<i class="fa-solid fa-clock"></i> <span class="approval-status-strip-text">Approval Pending — sent to ' +
         esc(W.memberName(active.approverId)) + ' · ' + fmtTime(active.createdAt) + '</span>';
-      body.insertBefore(strip, body.firstChild);
+      section.appendChild(strip);
 
       if (!amApprover) {
         var lb = document.createElement('div'); lb.id = 'apLockBanner'; lb.className = 'task-lock-banner';
-        lb.innerHTML = '<i class="fa-solid fa-lock"></i> Core fields are locked while this task is pending approval. Comments and subtasks stay open.';
-        body.insertBefore(lb, strip.nextSibling);
-        ['detailTitle', 'detailStatus', 'detailAssignee', 'detailDueDate', 'detailPriority'].forEach(function (id) {
-          var e = document.getElementById(id); if (e) e.classList.add('field-locked');
-        });
+        lb.innerHTML = '<i class="fa-solid fa-lock"></i> Core fields are locked while this task is pending approval. Subtasks stay editable.';
+        section.appendChild(lb);
+        LOCK_EL_IDS.forEach(function (id) { var e = document.getElementById(id); if (e) e.classList.add('field-locked'); });
       }
-      if (amApprover) body.insertBefore(decisionPanel(active), body.children[1] || null);
+      if (amApprover) section.appendChild(decisionPanel(active));
       else if (amAdmin && headerActions) headerActions.insertBefore(iconBtn('apAbortBtn', 'fa-ban', 'Abort approval', function () { showAbortModal(active); }), headerActions.firstChild);
     } else if (latest && latest.status === W.State.APPROVED) {
       var s2 = document.createElement('div'); s2.id = 'apStatusStrip'; s2.className = 'approval-status-strip approved';
       s2.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span class="approval-status-strip-text">Approved by ' + esc(W.memberName(latest.approverId)) + ' · ' + fmtTime(latest.resolvedAt) + '</span>';
-      body.insertBefore(s2, body.firstChild);
+      section.appendChild(s2);
     } else if (latest && (latest.status === W.State.REJECTED || latest.status === W.State.CHANGES_REQUESTED)) {
       var isRej = latest.status === W.State.REJECTED;
       var s3 = document.createElement('div'); s3.id = 'apStatusStrip'; s3.className = 'approval-status-strip changes-requested';
       s3.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <span class="approval-status-strip-text">' +
         (isRej ? 'Rejected' : 'Changes requested') + ' by ' + esc(W.memberName(latest.approverId)) +
         (latest.rejectionCategory ? ' (' + esc(latest.rejectionCategory) + ')' : '') + ' — ' + esc(latest.decisionNote || latest.feedback || '') + '</span>';
-      body.insertBefore(s3, body.firstChild);
+      section.appendChild(s3);
       if (amRequester && headerActions) headerActions.insertBefore(textBtn('apResubmitBtn', 'Re-submit', 'resubmit', function () { showResubmitModal(latest); }), headerActions.firstChild);
     }
 
-    // Request button when no open request and user may request
-    var noOpen = !active;
-    var canShowRequest = noOpen && amRequester && (!latest || latest.status === W.State.APPROVED || latest.status === W.State.ABORTED || !latest);
-    if (canShowRequest && latest && latest.status === W.State.APPROVED) canShowRequest = false; // already approved; leave as-is
-    if (noOpen && amRequester && (!latest || latest.status === W.State.ABORTED) && headerActions && !document.getElementById('apRequestBtn')) {
+    // Request button in the modal header when no open request and user may request
+    if (!active && amRequester && (!latest || latest.status === W.State.ABORTED) && headerActions && !document.getElementById('apRequestBtn')) {
       headerActions.insertBefore(textBtn('apRequestBtn', 'Request Approval', 'request', function () { showRequestModal(task, gid); }), headerActions.firstChild);
     }
 
-    var trail = auditTrail(taskId);
-    var timeline = document.getElementById('timelineList');
-    if (timeline && timeline.parentNode) timeline.parentNode.insertBefore(trail, timeline);
-    else body.appendChild(trail);
+    section.appendChild(auditTrail(taskId));
   }
 
   function iconBtn(id, icon, title, onClick) {
@@ -338,24 +334,9 @@
 
   function mirrorTimeline(task, action) { if (task && typeof window.addTimelineEntry === 'function') { try { window.addTimelineEntry(task, action); } catch (e) {} } }
 
-  // ── mandate guard (block Complete/Close when unapproved) ─────────────────────────
-  function installMandateGuard() {
-    document.addEventListener('change', function (e) {
-      var el = e.target;
-      if (!el || el.id !== 'detailStatus') return;
-      var W = AW(); if (!W) return;
-      var taskId = window.state && window.state.selectedTaskId; var task = taskById(taskId); if (!task) return;
-      var gid = task.group || task.groupId;
-      var val = el.value;
-      if (val !== 'Completed' && val !== 'Closed') return;
-      var check = W.TaskLock.validateTaskCompletion(taskId, gid);
-      if (!check.allowed) {
-        e.stopImmediatePropagation();   // prevent app.js handler from applying the change
-        el.value = task.status;          // revert visible selection
-        if (confirm(check.reason + '\n\nSend this task for approval now?')) showRequestModal(task, gid);
-      }
-    }, true); // capture phase
-  }
+  // Mandate is enforced at SAVE time inside app.js (the modal's status is a custom
+  // menu, not a native <select>). Expose the request modal so that flow can open it.
+  window.__openApprovalRequest = function (task, gid) { showRequestModal(task, gid); };
 
   // ── Approvals Hub (RHS) ─────────────────────────────────────────────────────────
   function pendingCountFor(userId) {
@@ -450,8 +431,9 @@
   // ── boot ─────────────────────────────────────────────────────────────────────
   function boot() {
     if (!AW()) { setTimeout(boot, 300); return; }
-    installMandateGuard();
     setInterval(injectInTask, 600);
+    // Mount immediately when the task modal opens for a task.
+    document.addEventListener('task:modal:opened', function () { setTimeout(injectInTask, 20); });
     updateHubBadge();
     AW().on('approval:changed', refresh);
     AW().on('approval:notify', function (d) {
@@ -464,7 +446,7 @@
       var hub = e.target.closest && e.target.closest('#approvalsHubBtn');
       if (hub) openHub();
     });
-    console.log('[ApprovalFlowUI] ready — in-task UI, mandate guard, Approvals Hub');
+    console.log('[ApprovalFlowUI] ready — modal in-task UI + Approvals Hub');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(boot, 400); });
