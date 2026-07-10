@@ -1515,6 +1515,16 @@ function renderListView() {
 
     function $el(id) { return document.getElementById(id); }
 
+    // Templates button (injected by task-templates.js into .ntm-topbar-actions) should
+    // only show in the Create form, not when viewing/editing an existing task.
+    function setTemplatesBtnVisible(visible, attemptsLeft) {
+      var tb = document.getElementById('tm-ntm-btn');
+      if (tb) { tb.style.display = visible ? '' : 'none'; return; }
+      attemptsLeft = (attemptsLeft == null) ? 15 : attemptsLeft;
+      if (attemptsLeft <= 0) return;
+      setTimeout(function(){ setTemplatesBtnVisible(visible, attemptsLeft - 1); }, 100);
+    }
+
     function fmtDate(val) {
       if (!val) return 'Yet to set';
       var d = new Date(val + 'T00:00:00');
@@ -2149,6 +2159,7 @@ function renderListView() {
     // ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ reset & open ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ
     function resetAndOpen(opts) {
       editingTaskId = null;
+      if (window.state) window.state.selectedTaskId = null; // Create form: no approval UI (that keys off selectedTaskId)
       var _sb = $el('modalSaveBtn'); if (_sb) _sb.textContent = 'Save';
       selGroupId=''; selStatus='Open'; selPriority='Medium'; selTags=[]; mtSubtasks=[]; selAssignee='';
       if (window.state && window.state.members && window.state.members.length) {
@@ -2213,6 +2224,7 @@ function renderListView() {
       updateAssigneeChip(); updatePriorityBtn(); renderSubtasksList(); renderTagsBar();
       var m=$el('taskModal'); if(m) m.style.display='flex';
       if($el('modalTaskTitle')) $el('modalTaskTitle').focus();
+      setTemplatesBtnVisible(true); // Create form: Templates button visible
     }
 
     // ── open the modal to VIEW / EDIT an existing task (redesigned task view) ──
@@ -2251,6 +2263,7 @@ function renderListView() {
       renderSubtasksList();
       // Save button reflects edit
       var sb=$el('modalSaveBtn'); if (sb) sb.textContent = 'Save';
+      setTemplatesBtnVisible(false); // View/Edit form: Templates button hidden
       // Let approval UI mount immediately
       try { document.dispatchEvent(new CustomEvent('task:modal:opened', { detail:{ taskId: taskId } })); } catch(e){}
     }
