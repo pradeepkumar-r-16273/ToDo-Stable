@@ -76,17 +76,98 @@
     }).join('');
   }
 
+  // ===== TEMPLATES BROWSER STATE =====
+  let templatesActiveCategory = 'All';
+  let templatesSearchQuery = '';
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function matchesTemplate(t, q) {
+    if (!q) return true;
+    const hay = (t.name + ' ' + (t.description || '') + ' ' + (t.category || '') +
+                 ' ' + ((t.rule && t.rule.trigger && t.rule.trigger.type) || '') +
+                 ' ' + (t.rule && Array.isArray(t.rule.actions) ? t.rule.actions.map(a => a.type).join(' ') : '')
+                ).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  }
+
+  function getTemplateCategories() {
+    const all = WorkflowEngine.Templates.map(t => t.category || 'General');
+    const uniq = Array.from(new Set(all));
+    return ['All'].concat(uniq);
+  }
+
+  function renderTemplateCategories() {
+    const list = document.getElementById('templatesCategoryList');
+    if (!list) return;
+    const cats = getTemplateCategories();
+    const q = templatesSearchQuery;
+    const counts = {};
+    WorkflowEngine.Templates.forEach(t => {
+      if (!matchesTemplate(t, q)) return;
+      const c = t.category || 'General';
+      counts[c] = (counts[c] || 0) + 1;
+    });
+    const totalMatched = Object.values(counts).reduce((a, b) => a + b, 0);
+    list.innerHTML = cats.map(c => {
+      const n = c === 'All' ? totalMatched : (counts[c] || 0);
+      const activeCls = c === templatesActiveCategory ? ' active' : '';
+      return '<div class="wf-tpl-cat' + activeCls + '" data-cat="' + escapeHtml(c) + '">' +
+               '<span class="wf-tpl-cat-name">' + escapeHtml(c) + '</span>' +
+               '<span class="wf-tpl-cat-count">' + n + '</span>' +
+             '</div>';
+    }).join('');
+  }
+
   // ===== RENDER TEMPLATES =====
   function renderTemplates() {
     const grid = document.getElementById('templatesGrid');
-    grid.innerHTML = WorkflowEngine.Templates.map(t =>
-      '<div class="wf-template-card" data-template="' + t.id + '">' +
-        '<div class="wf-template-icon"><i class="fa-solid ' + t.icon + '"></i></div>' +
-        '<div class="wf-template-name">' + t.name + '</div>' +
-        '<div class="wf-template-desc">' + t.description + '</div>' +
-        '<span class="wf-template-category">' + t.category + '</span>' +
-      '</div>'
-    ).join('');
+    if (!grid) return;
+    renderTemplateCategories();
+    const q = templatesSearchQuery;
+    const activeCat = templatesActiveCategory;
+    const list = WorkflowEngine.Templates.filter(t => {
+      if (activeCat !== 'All' && (t.category || 'General') !== activeCat) return false;
+      return matchesTemplate(t, q);
+    });
+
+    if (list.length === 0) {
+      grid.innerHTML = '<div class="wf-templates-empty">' +
+        '<i class="fa-solid fa-magnifying-glass"></i>' +
+        '<h3>No templates match</h3>' +
+        '<p>Try a different search or category.</p>' +
+        '</div>';
+      return;
+    }
+
+    // Group by category and render sections (keeps 100+ templates browsable)
+    const groups = {};
+    list.forEach(t => {
+      const c = t.category || 'General';
+      (groups[c] = groups[c] || []).push(t);
+    });
+    const cats = Object.keys(groups);
+
+    grid.innerHTML = cats.map(cat => {
+      const cards = groups[cat].map(t =>
+        '<div class="wf-template-card" data-template="' + escapeHtml(t.id) + '">' +
+          '<div class="wf-template-icon"><i class="fa-solid ' + escapeHtml(t.icon || 'fa-bolt') + '"></i></div>' +
+          '<div class="wf-template-name">' + escapeHtml(t.name) + '</div>' +
+          '<div class="wf-template-desc">' + escapeHtml(t.description || '') + '</div>' +
+          '<span class="wf-template-category">' + escapeHtml(t.category || 'General') + '</span>' +
+        '</div>'
+      ).join('');
+      return '<div class="wf-templates-group">' +
+               '<div class="wf-templates-group-header">' + escapeHtml(cat) +
+                 ' <span class="wf-templates-group-count">' + groups[cat].length + '</span>' +
+               '</div>' +
+               '<div class="wf-templates-group-grid">' + cards + '</div>' +
+             '</div>';
+    }).join('');
   }
 
   // ===== RENDER LOGS =====
@@ -345,6 +426,30 @@
         openRuleBuilder({ name: tpl.name, description: tpl.description, ...tpl.rule });
       }
     });
+
+    // Template category filter
+    const catList = document.getElementById('templatesCategoryList');
+    if (catList) {
+      catList.addEventListener('click', (e) => {
+        const item = e.target.closest('.wf-tpl-cat');
+        if (!item) return;
+        templatesActiveCategory = item.dataset.cat || 'All';
+        renderTemplates();
+      });
+    }
+
+    // Template search
+    const searchInput = document.getElementById('templatesSearchInput');
+    if (searchInput) {
+      let searchDebounce = null;
+      searchInput.addEventListener('input', (e) => {
+        if (searchDebounce) clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+          templatesSearchQuery = (e.target.value || '').trim().toLowerCase();
+          renderTemplates();
+        }, 120);
+      });
+    }
 
     // Trigger change
     document.getElementById('triggerType').addEventListener('change', function() {

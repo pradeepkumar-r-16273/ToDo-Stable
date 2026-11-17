@@ -47,7 +47,7 @@
         </div>
         <div class="wf-sidebar-item" data-tab="templates">
           <i class="fa-solid fa-shapes"></i> Templates
-          <span class="count" id="templatesCount">11</span>
+          <span class="count" id="templatesCount">112</span>
         </div>
         <div class="wf-sidebar-item" data-tab="logs">
           <i class="fa-solid fa-timeline"></i> Execution Logs
@@ -100,8 +100,15 @@
       <div id="tabTemplates" class="wf-tab-content" style="display:none;">
         <div class="wf-rules-header">
           <h2>Automation Templates</h2>
+          <div class="wf-templates-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="templatesSearchInput" placeholder="Search templates by name, category, or trigger...">
+          </div>
         </div>
-        <div id="templatesGrid" class="wf-templates"></div>
+        <div class="wf-templates-layout">
+          <div class="wf-templates-cats" id="templatesCategoryList"></div>
+          <div id="templatesGrid" class="wf-templates"></div>
+        </div>
       </div>
 
       <!-- Logs Tab -->
